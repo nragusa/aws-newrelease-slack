@@ -9,7 +9,7 @@ Get the latest AWS service and feature announcements delivered directly into the
 #### Slack App
 You'll need to create a [Slack app](https://api.slack.com/start) in your workspace first. If you don't know how, ask your Slack administrator for help.
 
-Once you have the app created, you'll need the [incoming webhook URL](https://api.slack.com/start/planning/communicating#communicating-with-users__incoming-webhooks). This is the endpoint used to push the messages into your Slack channel. Save this URL!
+Once you have the app created, you'll need to [activate incoming webhooks](https://slack.com/help/articles/115005265063-Incoming-webhooks-for-Slack). Once activated, grab the [incoming webhook URL](https://api.slack.com/start/planning/communicating#communicating-with-users__incoming-webhooks) and save it for later.
 
 #### AWS CDK
 This application was built with the [AWS CDK](https://docs.aws.amazon.com/cdk/latest/guide/getting_started.html). You'll need to [install the AWS CDK Toolkit](https://docs.aws.amazon.com/cdk/latest/guide/getting_started.html) before moving on.
