@@ -17,6 +17,7 @@ import json
 import requests
 import logging
 import os
+from aws_xray_sdk.core import xray_recorder
 from aws_xray_sdk.core import patch_all
 from bs4 import BeautifulSoup
 from datetime import datetime
@@ -24,6 +25,7 @@ from dateutil import parser
 from botocore.exceptions import ClientError
 from boto3.dynamodb.conditions import Key
 
+xray_recorder.configure(service='AWS Releases to Slack')
 patch_all()
 logger = logging.getLogger()
 logger.setLevel(logging.INFO)

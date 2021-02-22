@@ -35,6 +35,7 @@ class AwsNewreleaseSlackStack(core.Stack):
                 DDB_TABLE=ddb_table.table_name
             ),
             memory_size=512,
+            tracing=lambda_.Tracing.ACTIVE,
             timeout=core.Duration.seconds(60),
             log_retention=logs.RetentionDays.SIX_MONTHS
         )
