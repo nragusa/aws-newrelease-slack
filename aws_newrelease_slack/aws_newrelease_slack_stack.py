@@ -5,7 +5,7 @@ from aws_cdk import aws_events_targets as events_targets
 from aws_cdk import aws_lambda as lambda_
 from aws_cdk import aws_lambda_python as lambda_python
 from aws_cdk import aws_logs as logs
-
+from aws_cdk import aws_secretsmanager as secretsmanager
 
 class AwsNewreleaseSlackStack(core.Stack):
 
@@ -31,7 +31,7 @@ class AwsNewreleaseSlackStack(core.Stack):
             description='Queries https://aws.amazon.com/new/ and sends new release info to a Slack channel via AWS Chatbot',
             environment=dict(
                 WHATS_NEW_URL=self.node.try_get_context('whats_new_url'),
-                WEBHOOK_URL=self.node.try_get_context('slack_webhook_url'),
+                WEBHOOK_SECRET_NAME=self.node.try_get_context('slack_webhook_secret_name'),
                 DDB_TABLE=ddb_table.table_name
             ),
             memory_size=512,
@@ -39,6 +39,14 @@ class AwsNewreleaseSlackStack(core.Stack):
             timeout=core.Duration.seconds(60),
             log_retention=logs.RetentionDays.SIX_MONTHS
         )
+        """Imports the SecretsManager secret which contains the Slack webhook url(s)
+        and adds read access to the Lambda execution role
+        """
+        slack_webhook_urls = secretsmanager.Secret.from_secret_name_v2(
+            self, "SlackWebhookURLSecrets",
+            secret_name=self.node.try_get_context('slack_webhook_secret_name')
+        )
+        slack_webhook_urls.grant_read(new_release_function.role)
 
         """Invoke this function every X minutes"""
         rule = events.Rule(

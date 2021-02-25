@@ -17,6 +17,7 @@ import json
 import requests
 import logging
 import os
+from aws_secretsmanager_caching import SecretCache, SecretCacheConfig
 from aws_xray_sdk.core import xray_recorder
 from aws_xray_sdk.core import patch_all
 from bs4 import BeautifulSoup
@@ -31,7 +32,7 @@ logger = logging.getLogger()
 logger.setLevel(logging.INFO)
 
 WHATS_NEW_URL = os.environ['WHATS_NEW_URL']
-WEBHOOK_URL = os.environ['WEBHOOK_URL']
+WEBHOOK_SECRET_NAME = os.environ['WEBHOOK_SECRET_NAME']
 DDB_TABLE = os.environ['DDB_TABLE']
 
 
@@ -46,16 +47,17 @@ def has_been_slacked(entry_id):
     else:
         return False
 
-def post_slack(slack_msg):
+def post_slack(slack_msg, urls):
     """Posts the message to Slack webhook endpoint"""
     logger.debug(f'{json.dumps(slack_msg)}')
     try:
         logger.info(f'Posting to Slack: {slack_msg["text"]}')
-        post = requests.post(
-            WEBHOOK_URL,
-            data=json.dumps(slack_msg),
-            headers={'Content-Type': 'application/json'}
-        )
+        for url in urls:
+            post = requests.post(
+                url,
+                data=json.dumps(slack_msg),
+                headers={'Content-Type': 'application/json'}
+            )
     except requests.exceptions.RequestException as error:
         logger.error(f'Problem posting release to slack: {error}')
 
@@ -141,6 +143,26 @@ def make_slack_msg(entry):
     )
     return message
 
+def get_webhook_urls():
+    """Retrieves the Slack Webhook URLs that are stored in Secrets Manager.
+    Uses the AWS Secrets Manager caching library to cache locally
+    so each invokation doesn't need to perform a GetSecretValue call.
+    """
+    client = boto3.client('secretsmanager')
+    cache_config = SecretCacheConfig()
+    cache = SecretCache(config=cache_config, client=client)
+    try:
+        secret_urls = cache.get_secret_string(WEBHOOK_SECRET_NAME)
+        slack_urls = json.loads(secret_urls)
+    except ClientError as error:
+        logger.error(f'Problem getting the Slack Webhook URLs: {error}')
+        raise
+    except json.JSONDecodeError as error:
+        logger.error(f'Problem decoding JSON: {error}')
+        raise
+    else:
+        return slack_urls['urls']
+
 def main(event, context):
     """Iterates over each entry in the news feed, checks if the ID
     is already in the DynamoDB history table. If not, creates a slack message
@@ -153,6 +175,8 @@ def main(event, context):
         logger.error(f'Problem getting feed: {error}')
         raise
     else:
+        logger.info('Getting Slack Webhook URL(s) from Secrets Manager')
+        urls = get_webhook_urls()
         logger.info('Parsing RSS feed')
         for entry in feed['entries']:
             # check entry has been sent
@@ -160,7 +184,7 @@ def main(event, context):
                 continue
             else:
                 slack_msg = make_slack_msg(entry)
-                post_slack(slack_msg)
+                post_slack(slack_msg, urls)
                 log_slack(entry['id'], entry['title'], 
                             entry['published'], entry['link'])
 
