@@ -32,7 +32,9 @@ class AwsNewreleaseSlackStack(core.Stack):
             environment=dict(
                 WHATS_NEW_URL=self.node.try_get_context('whats_new_url'),
                 WEBHOOK_SECRET_NAME=self.node.try_get_context('slack_webhook_secret_name'),
-                DDB_TABLE=ddb_table.table_name
+                DDB_TABLE=ddb_table.table_name,
+                LOG_LEVEL='DEBUG',
+                POWERTOOLS_SERVICE_NAME='aws-to-slack'
             ),
             memory_size=512,
             tracing=lambda_.Tracing.ACTIVE,

@@ -46,10 +46,15 @@ source .venv/bin/activate
 pip install -r requirements.txt
 ```
 
-Rename the file `cdk.json.example` to `cdk.json`. Update the value of __slack_webhook_url__ to the URL specific to the Slack app you created earlier. 
+Rename the file `cdk.json.example` to `cdk.json`. Update the value of __slack_webhook_secret_name__ to the value of the Secrets Manager secret name you created earlier, e.g. __aws-to-slack/dev/webhooks__. 
 
 Deploy the application and enjoy!
 
 ```bash
-cdk deploy
+cdk deploy aws-newrelease-slack-dev -c slack_webhook_secret_name=aws-to-slack/dev/webhooks
+```
+
+If you'd like to have a production environment, create a production version of the Slack webhooks in AWS Secrets Manager, then run:
+```bash
+cdk deploy aws-newrelease-slack-prod -c slack_webhook_secret_name=your/prod/webhooks-name
 ```

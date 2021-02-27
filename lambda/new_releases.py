@@ -15,9 +15,9 @@ import boto3
 import feedparser
 import json
 import requests
-import logging
 import os
-from aws_secretsmanager_caching import SecretCache, SecretCacheConfig
+from aws_lambda_powertools import Logger
+from aws_lambda_powertools.utilities import parameters
 from aws_xray_sdk.core import xray_recorder
 from aws_xray_sdk.core import patch_all
 from bs4 import BeautifulSoup
@@ -28,13 +28,11 @@ from boto3.dynamodb.conditions import Key
 
 xray_recorder.configure(service='AWS Releases to Slack')
 patch_all()
-logger = logging.getLogger()
-logger.setLevel(logging.INFO)
+logger = Logger()
 
 WHATS_NEW_URL = os.environ['WHATS_NEW_URL']
 WEBHOOK_SECRET_NAME = os.environ['WEBHOOK_SECRET_NAME']
 DDB_TABLE = os.environ['DDB_TABLE']
-
 
 def has_been_slacked(entry_id):
     """Returns true if the post ID is found in DDB table"""
@@ -148,13 +146,12 @@ def get_webhook_urls():
     Uses the AWS Secrets Manager caching library to cache locally
     so each invokation doesn't need to perform a GetSecretValue call.
     """
-    client = boto3.client('secretsmanager')
-    cache_config = SecretCacheConfig()
-    cache = SecretCache(config=cache_config, client=client)
+    logger.info('Getting Slack webhook URL(s) from AWS Secrets Manager')
     try:
-        secret_urls = cache.get_secret_string(WEBHOOK_SECRET_NAME)
+        # If not already in cache, keep urls in cache for 4 hours before re-calling
+        secret_urls = parameters.get_secret(WEBHOOK_SECRET_NAME, max_age=14400)
         slack_urls = json.loads(secret_urls)
-    except ClientError as error:
+    except parameters.exceptions.GetParameterError as error:
         logger.error(f'Problem getting the Slack Webhook URLs: {error}')
         raise
     except json.JSONDecodeError as error:
@@ -175,11 +172,10 @@ def main(event, context):
         logger.error(f'Problem getting feed: {error}')
         raise
     else:
-        logger.info('Getting Slack Webhook URL(s) from Secrets Manager')
         urls = get_webhook_urls()
         logger.info('Parsing RSS feed')
         for entry in feed['entries']:
-            # check entry has been sent
+            # check if entry has already been sent
             if has_been_slacked(entry['id']):
                 continue
             else:
