@@ -8,7 +8,6 @@
     "@aws-cdk/aws-secretsmanager:parseOwnedSecretName": true,
     "@aws-cdk/aws-kms:defaultKeyPolicies": true,
     "@aws-cdk/aws-s3:grantWriteWithoutAcl": true,
-    "whats_new_url": "http://aws.amazon.com/new/feed/",
-    "slack_webhook_secret_name": "aws-to-slack/dev/webhooks"
+    "whats_new_url": "http://aws.amazon.com/new/feed/"
   }
 }
