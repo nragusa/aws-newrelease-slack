@@ -12,6 +12,19 @@ class AwsNewreleaseSlackStack(core.Stack):
     def __init__(self, scope: core.Construct, construct_id: str, **kwargs) -> None:
         super().__init__(scope, construct_id, **kwargs)
 
+        """Default values if not specified via context variables from CLI
+        logging_level = 'INFO'
+        slack_webhook_secret_name = 'aws-to-slack/dev/webhooks'
+        """
+        if self.node.try_get_context('logging_level') is None:
+            LOGGING_LEVEL = 'INFO'
+        else:
+            LOGGING_LEVEL = self.node.try_get_context('logging_level')
+        if self.node.try_get_context('slack_webhook_secret_name') is None:
+            WEBHOOK_SECRET_NAME = 'aws-to-slack/dev/webhooks'
+        else:
+            WEBHOOK_SECRET_NAME = self.node.try_get_context('slack_webhook_secret_name')
+
         """DynamoDB table which stores a history of messages sent"""
         ddb_table = dynamodb.Table(
             self, 'SlackMessageHistory',
@@ -31,9 +44,9 @@ class AwsNewreleaseSlackStack(core.Stack):
             description='Queries https://aws.amazon.com/new/ and sends new release info to a Slack channel via AWS Chatbot',
             environment=dict(
                 WHATS_NEW_URL=self.node.try_get_context('whats_new_url'),
-                WEBHOOK_SECRET_NAME=self.node.try_get_context('slack_webhook_secret_name'),
+                WEBHOOK_SECRET_NAME=WEBHOOK_SECRET_NAME,
                 DDB_TABLE=ddb_table.table_name,
-                LOG_LEVEL='DEBUG',
+                LOG_LEVEL=LOGGING_LEVEL,
                 POWERTOOLS_SERVICE_NAME='aws-to-slack'
             ),
             memory_size=512,
@@ -46,7 +59,7 @@ class AwsNewreleaseSlackStack(core.Stack):
         """
         slack_webhook_urls = secretsmanager.Secret.from_secret_name_v2(
             self, "SlackWebhookURLSecrets",
-            secret_name=self.node.try_get_context('slack_webhook_secret_name')
+            secret_name=WEBHOOK_SECRET_NAME
         )
         slack_webhook_urls.grant_read(new_release_function.role)
 

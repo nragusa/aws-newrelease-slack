@@ -14,21 +14,19 @@ in DynamoDB it ignores it and moves on.
 import boto3
 import feedparser
 import json
-import requests
 import os
+import urllib3
 from aws_lambda_powertools import Logger
+from aws_lambda_powertools import Tracer
 from aws_lambda_powertools.utilities import parameters
-from aws_xray_sdk.core import xray_recorder
-from aws_xray_sdk.core import patch_all
 from bs4 import BeautifulSoup
 from datetime import datetime
 from dateutil import parser
 from botocore.exceptions import ClientError
 from boto3.dynamodb.conditions import Key
 
-xray_recorder.configure(service='AWS Releases to Slack')
-patch_all()
 logger = Logger()
+tracer = Tracer()
 
 WHATS_NEW_URL = os.environ['WHATS_NEW_URL']
 WEBHOOK_SECRET_NAME = os.environ['WEBHOOK_SECRET_NAME']
@@ -45,18 +43,19 @@ def has_been_slacked(entry_id):
     else:
         return False
 
-def post_slack(slack_msg, urls):
+def post_slack(slack_msg, urls, connection):
     """Posts the message to Slack webhook endpoint"""
     logger.debug(f'{json.dumps(slack_msg)}')
     try:
         logger.info(f'Posting to Slack: {slack_msg["text"]}')
         for url in urls:
-            post = requests.post(
+            post = connection.request(
+                'POST',
                 url,
-                data=json.dumps(slack_msg),
+                body=json.dumps(slack_msg).encode('utf-8'),
                 headers={'Content-Type': 'application/json'}
             )
-    except requests.exceptions.RequestException as error:
+    except urllib3.exceptions.HTTPError as error:
         logger.error(f'Problem posting release to slack: {error}')
 
 
@@ -160,6 +159,7 @@ def get_webhook_urls():
     else:
         return slack_urls['urls']
 
+@tracer.capture_lambda_handler
 def main(event, context):
     """Iterates over each entry in the news feed, checks if the ID
     is already in the DynamoDB history table. If not, creates a slack message
@@ -173,14 +173,16 @@ def main(event, context):
         raise
     else:
         urls = get_webhook_urls()
+        http_connection = urllib3.PoolManager()
         logger.info('Parsing RSS feed')
         for entry in feed['entries']:
             # check if entry has already been sent
             if has_been_slacked(entry['id']):
-                continue
+                logger.info('No new announcements to send')
+                break
             else:
                 slack_msg = make_slack_msg(entry)
-                post_slack(slack_msg, urls)
+                post_slack(slack_msg, urls, http_connection)
                 log_slack(entry['id'], entry['title'], 
                             entry['published'], entry['link'])
-
+    logger.info('Done!')
