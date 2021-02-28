@@ -12,7 +12,15 @@ You'll need to create a [Slack app](https://api.slack.com/start) in your workspa
 Once you have the app created, you'll need to [activate incoming webhooks](https://slack.com/help/articles/115005265063-Incoming-webhooks-for-Slack). Once activated, grab the [incoming webhook URL](https://api.slack.com/start/planning/communicating#communicating-with-users__incoming-webhooks) and save it for later.
 
 #### Add Slack WebhookURLs to Secrets Manager
-Since these URL(s) contain sensitive information, you should store them in [AWS Secrets Manager](https://aws.amazon.com/secrets-manager/) with encryption. Using the AWS CLI, run the following:
+Since these URL(s) contain sensitive information, you should store them in [AWS Secrets Manager](https://aws.amazon.com/secrets-manager/) with encryption. 
+
+First, come up with a sensisble name for this secret within AWS Secrets Manager. As a best practice, use a hierarcy when naming the secrets so you can easily restrict access by their ARNs. Once you have a name, export it into your environment as we'll reference it a few times:
+
+```bash
+export SLACK_WEBHOOK_SECRET_NAME=aws-to-slack/dev/webhooks
+```
+
+Now run the following to create and store the secret:
 
 ```bash
 cat > secret.json
@@ -23,7 +31,7 @@ cat > secret.json
     ]
 }
 aws secretsmanager create-secret \
-    --name "aws-to-slack/dev/webhooks" \
+    --name ${SLACK_WEBHOOK_SECRET_NAME} \
     --description "The Slack Webhoook URL(s) for the AWS New Releases Slack app" \
     --secret-string file://secret.json
     --tags Key=Project,Value="AWS New Releases Chatbot"
@@ -46,12 +54,10 @@ source .venv/bin/activate
 pip install -r requirements.txt
 ```
 
-Rename the file `cdk.json.example` to `cdk.json`. Update the value of __slack_webhook_secret_name__ to the value of the Secrets Manager secret name you created earlier, e.g. __aws-to-slack/dev/webhooks__. 
-
 Deploy the application and enjoy!
 
 ```bash
-cdk deploy aws-newrelease-slack-dev -c slack_webhook_secret_name=aws-to-slack/dev/webhooks
+cdk deploy aws-newrelease-slack-dev -c slack_webhook_secret_name=${SLACK_WEBHOOK_SECRET_NAME}
 ```
 
 If you'd like to have a production environment, create a production version of the Slack webhooks in AWS Secrets Manager, then run:
