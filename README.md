@@ -14,10 +14,10 @@ Once you have the app created, you'll need to [activate incoming webhooks](https
 #### Add Slack WebhookURLs to Secrets Manager
 Since these URL(s) contain sensitive information, you should store them in [AWS Secrets Manager](https://aws.amazon.com/secrets-manager/) with encryption. 
 
-First, come up with a sensisble name for this secret within AWS Secrets Manager. As a best practice, use a hierarcy when naming the secrets so you can easily restrict access by their ARNs. Once you have a name, export it into your environment as we'll reference it a few times:
+First, come up with a sensisble name for this secret within AWS Secrets Manager. As a best practice, use a naming scheme that uses a hierarchy so you can easily restrict access by their ARNs. Once you have a name, export it into your environment as we'll reference it a few times:
 
 ```bash
-export SLACK_WEBHOOK_SECRET_NAME=aws-to-slack/dev/webhooks
+export SLACK_WEBHOOK_SECRET_NAME=your/path/to/slack/webhooks
 ```
 
 Now run the following to create and store the secret:
