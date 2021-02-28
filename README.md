@@ -5,6 +5,10 @@ Get the latest AWS service and feature announcements delivered directly into the
 
 ![Example Screenshot](docs/images/screenshot.png)
 
+All of this is powered by a simple Lambda function and a DynamoDB table to maintain a history of what was already sent:
+
+![Architecture](https://lucid.app/publicSegments/view/c662d7e1-955e-43bf-9f35-ea4908a066c3/image.png)
+
 ### Pre-Reqs
 #### Slack App
 You'll need to create a [Slack app](https://api.slack.com/start) in your workspace first. If you don't know how, ask your Slack administrator for help.
