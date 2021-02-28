@@ -8,6 +8,6 @@
     "@aws-cdk/aws-secretsmanager:parseOwnedSecretName": true,
     "@aws-cdk/aws-kms:defaultKeyPolicies": true,
     "@aws-cdk/aws-s3:grantWriteWithoutAcl": true,
-    "whats_new_url": "http://aws.amazon.com/new/feed/"
+    "whats_new_url": "https://aws.amazon.com/about-aws/whats-new/recent/feed/"
   }
 }

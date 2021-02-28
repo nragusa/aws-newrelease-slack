@@ -26,7 +26,7 @@ from botocore.exceptions import ClientError
 from boto3.dynamodb.conditions import Key
 
 logger = Logger()
-tracer = Tracer()
+tracer = Tracer(patch_modules=['boto3', 'httplib'])
 
 WHATS_NEW_URL = os.environ['WHATS_NEW_URL']
 WEBHOOK_SECRET_NAME = os.environ['WEBHOOK_SECRET_NAME']
@@ -186,3 +186,4 @@ def main(event, context):
                 log_slack(entry['id'], entry['title'], 
                             entry['published'], entry['link'])
     logger.info('Done!')
+    return
