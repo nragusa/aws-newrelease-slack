@@ -14,7 +14,7 @@ Once you have the app created, you'll need to [activate incoming webhooks](https
 #### Add Slack WebhookURLs to Secrets Manager
 Since these URL(s) contain sensitive information, you should store them in [AWS Secrets Manager](https://aws.amazon.com/secrets-manager/) with encryption. 
 
-First, come up with a sensisble name for this secret within AWS Secrets Manager. As a best practice, use a naming scheme that uses a hierarchy so you can easily restrict access by their ARNs. Once you have a name, export it into your environment as we'll reference it a few times:
+First, come up with a sensible name for this secret within AWS Secrets Manager. As a best practice, use a naming scheme that uses a hierarchy so you can easily restrict access by their ARNs. Once you have a name, export it into your environment as we'll reference it a few times:
 
 ```bash
 export SLACK_WEBHOOK_SECRET_NAME=your/path/to/slack/webhooks
@@ -23,20 +23,22 @@ export SLACK_WEBHOOK_SECRET_NAME=your/path/to/slack/webhooks
 Now run the following to create and store the secret:
 
 ```bash
+# Write a file locally with the URLs in this format
 cat > secret.json
 {
     "urls": [
-        "https://hooks.slack.com/services/ABC123/XYZ123/sddfi3212309dsfjkljasdf",
-        "https://hooks.slack.com/services/ABC123/XYZ321/sadklfjlsadjfsldjs32sdd"
+        "https://hooks.slack.com/services/T00000000/B00000000/XXXXXXXXXXXXXXXXXXXXXXXX"
     ]
 }
+# Store this in AWS Secrets Manager
 aws secretsmanager create-secret \
     --name ${SLACK_WEBHOOK_SECRET_NAME} \
-    --description "The Slack Webhoook URL(s) for the AWS New Releases Slack app" \
+    --description "The Slack Webhook URL(s) for the AWS New Releases Slack app" \
     --secret-string file://secret.json
     --tags Key=Project,Value="AWS New Releases Chatbot"
+# Overwrite + delete the file
 shred -u secret.json
-# can use rm -P secret.json on Mac OS as an alternative to shred
+# OS X users can use 'rm -P secret.json'
 ```
 
 This will use the default KMS key for encryption. If you wish to use your own key, you'll need to make sure the Lambda execution role has access to use this key as well.
@@ -46,7 +48,7 @@ This application was built with the [AWS CDK](https://docs.aws.amazon.com/cdk/la
 
 ### Installation
 
-Now that you have a Slack app configured and the AWS CDK Toolkit installed, you'll need to deploy this appplication into your AWS account. Clone this project, `cd` into the project directory and run:
+Now that you have a Slack app configured and the AWS CDK Toolkit installed, you'll need to deploy this application into your AWS account. Clone this project, `cd` into the project directory and run:
 
 ```bash
 python3 -m venv .venv
