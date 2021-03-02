@@ -20,8 +20,7 @@ from aws_lambda_powertools import Logger
 from aws_lambda_powertools import Tracer
 from aws_lambda_powertools.utilities import parameters
 from bs4 import BeautifulSoup
-from datetime import datetime
-from dateutil import parser
+from datetime import datetime, timedelta, timezone
 from botocore.exceptions import ClientError
 from boto3.dynamodb.conditions import Key
 
@@ -72,8 +71,8 @@ def log_slack(entry_id, title, pub_date, url):
     url -- the URL for this announcement
     """
     ddb_client = boto3.client('dynamodb')
-    slack_date = datetime.utcnow().isoformat(' ').split('.')[0]
-    published_date = parser.parse(pub_date).isoformat(' ').split('+')[0]
+    slack_date = datetime.now(timezone.utc).isoformat(' ').split('.')[0]
+    published_date = format_date(pub_date).isoformat(' ').split('+')[0]
     try:
         response = ddb_client.put_item(TableName=DDB_TABLE,
                                     Item={
@@ -143,7 +142,7 @@ def make_slack_msg(entry):
 def get_webhook_urls():
     """Retrieves the Slack Webhook URLs that are stored in Secrets Manager.
     Uses the AWS Secrets Manager caching library to cache locally
-    so each invokation doesn't need to perform a GetSecretValue call.
+    so each invocation doesn't need to perform a GetSecretValue call.
     """
     logger.info('Getting Slack webhook URL(s) from AWS Secrets Manager')
     try:
@@ -158,6 +157,9 @@ def get_webhook_urls():
         raise
     else:
         return slack_urls['urls']
+
+def format_date(d):
+    return datetime.strptime(d, '%a, %d %b %Y %H:%M:%S %z')
 
 @tracer.capture_lambda_handler
 def main(event, context):
@@ -175,11 +177,14 @@ def main(event, context):
         urls = get_webhook_urls()
         http_connection = urllib3.PoolManager()
         logger.info('Parsing RSS feed')
-        for entry in feed['entries']:
+        twelve_hours_ago = timedelta(hours=12)
+        now = datetime.now(timezone.utc)
+        # Only look at entries that were published 12 hours ago
+        for entry in [x for x in feed['entries'] if (now - format_date(x['published'])) < twelve_hours_ago]:
             # check if entry has already been sent
             if has_been_slacked(entry['id']):
-                logger.info('No new announcements to send')
-                break
+                logger.debug(f'Already sent message with ID {entry["id"]}')
+                continue
             else:
                 slack_msg = make_slack_msg(entry)
                 post_slack(slack_msg, urls, http_connection)
