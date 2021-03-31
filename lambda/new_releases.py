@@ -31,6 +31,7 @@ WHATS_NEW_URL = os.environ['WHATS_NEW_URL']
 WEBHOOK_SECRET_NAME = os.environ['WEBHOOK_SECRET_NAME']
 DDB_TABLE = os.environ['DDB_TABLE']
 
+
 def has_been_slacked(entry_id):
     """Returns true if the post ID is found in DDB table"""
     logger.debug(f'Querying DDB for id = {entry_id}')
@@ -42,9 +43,9 @@ def has_been_slacked(entry_id):
     else:
         return False
 
+
 def post_slack(slack_msg, urls, connection):
     """Posts the message to Slack webhook endpoint"""
-    logger.debug(f'{json.dumps(slack_msg)}')
     try:
         logger.info(f'Posting to Slack: {slack_msg["text"]}')
         for url in urls:
@@ -75,26 +76,27 @@ def log_slack(entry_id, title, pub_date, url):
     published_date = format_date(pub_date).isoformat(' ').split('+')[0]
     try:
         response = ddb_client.put_item(TableName=DDB_TABLE,
-                                    Item={
-                                        'id': {
-                                            'S': entry_id
-                                        },
-                                        'title': {
-                                            'S': title
-                                        },
-                                        'pub_date': {
-                                            'S': published_date
-                                        },
-                                        'slack_date': {
-                                            'S': slack_date
-                                        },
-                                        'url': {
-                                            'S': url
-                                        }
-                                    })
+                                       Item={
+                                           'id': {
+                                               'S': entry_id
+                                           },
+                                           'title': {
+                                               'S': title
+                                           },
+                                           'pub_date': {
+                                               'S': published_date
+                                           },
+                                           'slack_date': {
+                                               'S': slack_date
+                                           },
+                                           'url': {
+                                               'S': url
+                                           }
+                                       })
         logger.info(f'Added {title} to DDB table')
     except ClientError as error:
         logger.error(f'Problem adding history to slack: {error}')
+
 
 def make_slack_msg(entry):
     """Generates a JSON object that conforms to the Slack Bock Kit
@@ -104,6 +106,7 @@ def make_slack_msg(entry):
     Keyword arguments:
     entry -- A single item in the RSS feed that contains release info
     """
+    logger.debug('Formmating message to send to Slack')
     description = BeautifulSoup(entry['description'], 'html.parser')
     message = dict(
         text=entry['title'],
@@ -118,8 +121,8 @@ def make_slack_msg(entry):
             dict(
                 type='section',
                 text=dict(
-                        type='plain_text',
-                        text=description.get_text()
+                    type='plain_text',
+                    text=description.get_text()
                 ),
                 accessory=dict(
                     type='button',
@@ -137,7 +140,9 @@ def make_slack_msg(entry):
             )
         ]
     )
+    logger.debug(f'Formatted message: {message}')
     return message
+
 
 def get_webhook_urls():
     """Retrieves the Slack Webhook URLs that are stored in Secrets Manager.
@@ -158,8 +163,10 @@ def get_webhook_urls():
     else:
         return slack_urls['urls']
 
+
 def format_date(d):
     return datetime.strptime(d, '%a, %d %b %Y %H:%M:%S %z')
+
 
 @tracer.capture_lambda_handler
 def main(event, context):
@@ -181,14 +188,17 @@ def main(event, context):
         now = datetime.now(timezone.utc)
         # Only look at entries that were published 12 hours ago
         for entry in [x for x in feed['entries'] if (now - format_date(x['published'])) < twelve_hours_ago]:
+            logger.debug('Checking entry', extra={
+                         'id': entry['id'], 'title': entry['title'], 'published': entry['published']})
             # check if entry has already been sent
             if has_been_slacked(entry['id']):
                 logger.debug(f'Already sent message with ID {entry["id"]}')
                 continue
             else:
+                logger.debug('Found release to send to Slack')
                 slack_msg = make_slack_msg(entry)
                 post_slack(slack_msg, urls, http_connection)
-                log_slack(entry['id'], entry['title'], 
-                            entry['published'], entry['link'])
+                log_slack(entry['id'], entry['title'],
+                          entry['published'], entry['link'])
     logger.info('Done!')
     return
