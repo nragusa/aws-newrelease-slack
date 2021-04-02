@@ -1,4 +1,3 @@
-
 ## AWS New Releases to Slack
 
 Get the latest AWS service and feature announcements delivered directly into the Slack channel of your choice.
@@ -10,13 +9,16 @@ All of this is powered by a simple Lambda function and a DynamoDB table to maint
 ![Architecture](https://lucid.app/publicSegments/view/c662d7e1-955e-43bf-9f35-ea4908a066c3/image.png)
 
 ### Pre-Reqs
+
 #### Slack App
+
 You'll need to create a [Slack app](https://api.slack.com/start) in your workspace first. If you don't know how, ask your Slack administrator for help.
 
 Once you have the app created, you'll need to [activate incoming webhooks](https://slack.com/help/articles/115005265063-Incoming-webhooks-for-Slack). Once activated, grab the [incoming webhook URL](https://api.slack.com/start/planning/communicating#communicating-with-users__incoming-webhooks) and save it for later.
 
 #### Add Slack WebhookURLs to Secrets Manager
-Since these URL(s) contain sensitive information, you should store them in [AWS Secrets Manager](https://aws.amazon.com/secrets-manager/) with encryption. 
+
+Since these URL(s) contain sensitive information, you should store them in [AWS Secrets Manager](https://aws.amazon.com/secrets-manager/) with encryption.
 
 First, come up with a sensible name for this secret within AWS Secrets Manager. As a best practice, use a naming scheme that uses a hierarchy so you can easily restrict access by their ARNs. Once you have a name, export it into your environment as we'll reference it a few times:
 
@@ -48,6 +50,7 @@ shred -u secret.json
 This will use the default KMS key for encryption. If you wish to use your own key, you'll need to make sure the Lambda execution role has access to use this key as well.
 
 #### AWS CDK
+
 This application was built with the [AWS CDK](https://docs.aws.amazon.com/cdk/latest/guide/getting_started.html). You'll need to [install the AWS CDK Toolkit](https://docs.aws.amazon.com/cdk/latest/guide/getting_started.html) before moving on.
 
 ### Installation
@@ -67,6 +70,7 @@ cdk deploy aws-newrelease-slack-dev -c slack_webhook_secret_name=${SLACK_WEBHOOK
 ```
 
 If you'd like to have a production environment, create a production version of the Slack webhooks in AWS Secrets Manager, then run:
+
 ```bash
 cdk deploy aws-newrelease-slack-prod -c slack_webhook_secret_name=your/prod/webhooks-name
 ```

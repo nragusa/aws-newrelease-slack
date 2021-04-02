@@ -8,6 +8,7 @@
     "@aws-cdk/aws-secretsmanager:parseOwnedSecretName": true,
     "@aws-cdk/aws-kms:defaultKeyPolicies": true,
     "@aws-cdk/aws-s3:grantWriteWithoutAcl": true,
-    "whats_new_url": "https://aws.amazon.com/about-aws/whats-new/recent/feed/"
+    "whats_new_rss_feed": "https://aws.amazon.com/about-aws/whats-new/recent/feed/",
+    "whats_new_search_api": "https://aws.amazon.com/api/dirs/items/search?item.directoryId=whats-new&sort_by=item.additionalFields.postDateTime&sort_order=desc&size=25&item.locale=en_US"
   }
 }

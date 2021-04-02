@@ -7,6 +7,7 @@ from aws_cdk import aws_lambda_python as lambda_python
 from aws_cdk import aws_logs as logs
 from aws_cdk import aws_secretsmanager as secretsmanager
 
+
 class AwsNewreleaseSlackStack(core.Stack):
 
     def __init__(self, scope: core.Construct, construct_id: str, **kwargs) -> None:
@@ -23,12 +24,14 @@ class AwsNewreleaseSlackStack(core.Stack):
         if self.node.try_get_context('slack_webhook_secret_name') is None:
             WEBHOOK_SECRET_NAME = 'aws-to-slack/dev/webhooks'
         else:
-            WEBHOOK_SECRET_NAME = self.node.try_get_context('slack_webhook_secret_name')
+            WEBHOOK_SECRET_NAME = self.node.try_get_context(
+                'slack_webhook_secret_name')
 
         """DynamoDB table which stores a history of messages sent"""
         ddb_table = dynamodb.Table(
             self, 'SlackMessageHistory',
-            partition_key=dynamodb.Attribute(name='id', type=dynamodb.AttributeType.STRING),
+            partition_key=dynamodb.Attribute(
+                name='url', type=dynamodb.AttributeType.STRING),
             billing_mode=dynamodb.BillingMode.PAY_PER_REQUEST,
         )
 
@@ -43,7 +46,10 @@ class AwsNewreleaseSlackStack(core.Stack):
             runtime=lambda_.Runtime.PYTHON_3_8,
             description='Queries https://aws.amazon.com/new/ and sends new release info to a Slack channel via AWS Chatbot',
             environment=dict(
-                WHATS_NEW_URL=self.node.try_get_context('whats_new_url'),
+                WHATS_NEW_RSS_FEED=self.node.try_get_context(
+                    'whats_new_rss_feed'),
+                WHATS_NEW_SEARCH_API=self.node.try_get_context(
+                    'whats_new_search_api'),
                 WEBHOOK_SECRET_NAME=WEBHOOK_SECRET_NAME,
                 DDB_TABLE=ddb_table.table_name,
                 LOG_LEVEL=LOGGING_LEVEL,

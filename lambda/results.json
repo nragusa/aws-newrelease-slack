@@ -1,0 +1,74 @@
+{
+  "metadata": { "count": 25, "totalHits": 9014 },
+  "fieldTypes": {
+    "relatedBlog": "Text",
+    "postBody": "Text",
+    "modifiedDate": "DateTime",
+    "headlineUrl": "Text",
+    "postDateTime": "DateTime",
+    "postSummary": "Text",
+    "headline": "Text",
+    "contentType": "Text"
+  },
+  "items": [
+    {
+      "tags": [
+        {
+          "tagNamespaceId": "whats-new#marketing-marchitecture",
+          "createdBy": "aws",
+          "name": "training-and-certification",
+          "dateUpdated": "2019-05-03T03:40:48+0000",
+          "locale": "en_US",
+          "lastUpdatedBy": "aws",
+          "dateCreated": "2019-05-03T03:40:48+0000",
+          "description": "marketing:marchitecture/training-and-certification",
+          "id": "whats-new#marketing-marchitecture#training-and-certification"
+        },
+        {
+          "tagNamespaceId": "whats-new#year",
+          "createdBy": "aws",
+          "name": "2021",
+          "dateUpdated": "2021-01-04T16:43:43+0000",
+          "locale": "en_US",
+          "lastUpdatedBy": "aws",
+          "dateCreated": "2021-01-04T16:43:43+0000",
+          "description": "year#2021",
+          "id": "whats-new#year#2021"
+        },
+        {
+          "tagNamespaceId": "GLOBAL#content-type",
+          "createdBy": "jenbar",
+          "name": "launch-announcement",
+          "dateUpdated": "2020-04-29T05:19:27+0000",
+          "locale": "en_US",
+          "lastUpdatedBy": "jenbar",
+          "dateCreated": "2020-04-29T05:19:27+0000",
+          "description": "Launch Announcement",
+          "id": "GLOBAL#content-type#launch-announcement"
+        }
+      ],
+      "item": {
+        "createdBy": "aws",
+        "locale": "en_US",
+        "author": "aws",
+        "dateUpdated": "2021-03-31T17:16:25+0000",
+        "score": 0.0,
+        "name": "/about-aws/whats-new/2021/03/seven-popular-classroom-courses-now-with-aws-jam-options/",
+        "numImpressions": 0,
+        "dateCreated": "2021-03-31T17:16:24+0000",
+        "additionalFields": {
+          "postBody": "\u003cp\u003eAWS Training and Certification builds your competence, confidence, and credibility with practical cloud skills that help you innovate and advance your professional future. Learn more:\u003c/p\u003e\r\n\u003cul\u003e\r\n\u003cli\u003e\u003ca href\u003d\"/content/aws.amazon.com/live/en_US/training/classroom/architecting-on-aws.html\" target\u003d\"_self\"\u003eArchitecting on AWS with AWS Jam\u003c/a\u003e\u003c/li\u003e\r\n\u003cli\u003e\u003ca href\u003d\"/content/aws.amazon.com/live/en_US/training/classroom/advanced-architecting-aws.html\" target\u003d\"_self\"\u003eAdvanced Architecting on AWS with AWS Jam\u003c/a\u003e\u003cbr\u003e\r\n\u003c/li\u003e\r\n\u003cli\u003e\u003ca href\u003d\"/content/aws.amazon.com/live/en_US/training/classroom/advanced-developing-on-aws.html\" target\u003d\"_self\"\u003eAdvanced Developing on AWS with AWS Jam\u003c/a\u003e\u003cbr\u003e\r\n\u003c/li\u003e\r\n\u003cli\u003e\u003ca href\u003d\"/content/aws.amazon.com/live/en_US/training/classroom/devops-engineering-on-aws.html\" target\u003d\"_self\"\u003eDevOps Engineering on AWS with AWS Jam\u003c/a\u003e\u003cbr\u003e\r\n\u003c/li\u003e\r\n\u003cli\u003e\u003ca href\u003d\"/content/aws.amazon.com/live/en_US/training/classroom/developing-on-aws.html\" target\u003d\"_self\"\u003eDeveloping on AWS with AWS Jam\u003c/a\u003e\u003cbr\u003e\r\n\u003c/li\u003e\r\n\u003cli\u003e\u003ca href\u003d\"/content/aws.amazon.com/live/en_US/training/classroom/security-engineering-on-aws.html\" target\u003d\"_self\"\u003eSecurity Engineering on AWS with AWS Jam\u003c/a\u003e\u003cbr\u003e\r\n\u003c/li\u003e\r\n\u003cli\u003e\u003ca href\u003d\"/content/aws.amazon.com/live/en_US/training/classroom/systems-operations-on-aws.html\" target\u003d\"_self\"\u003eSystems Operations on AWS with AWS Jam\u003c/a\u003e\u003cbr\u003e\r\n\u003c/li\u003e\r\n\u003c/ul\u003e\r\n",
+          "modifiedDate": "2021-03-31T17:15:32Z",
+          "headlineUrl": "/about-aws/whats-new/2021/03/seven-popular-classroom-courses-now-with-aws-jam-options/",
+          "postDateTime": "2021-03-31T23:33:00Z",
+          "postSummary": "\u003cp\u003eCustomers who bring in private classroom training for their teams now have new options to supplement the in-course labs and instruction with an AWS Jam event. Seven of our popular three-day instructor-led courses are now available with an optional fourth day—an AWS Jam event—with gamified challenges to match the topics and services covered in the course. These are curated and instructor-facilitated to maximize learning and build your team’s capability in the AWS Cloud. These courses are generally available in all geographies, delivered in English. \u003c/p\u003e\r\n",
+          "contentType": "Launch Announcement",
+          "headline": "Seven popular classroom courses now with AWS Jam options "
+        },
+        "id": "whats-new#about-aws-whats-new-2021-03-seven-popular-classroom-courses-now-with-aws-jam-options",
+        "directoryId": "whats-new",
+        "lastUpdatedBy": "aws"
+      }
+    }
+  ]
+}
