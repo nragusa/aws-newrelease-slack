@@ -1,14 +1,17 @@
 """Sends a Slack message of articles that were posted in the AWS
 'What's New' news feed.
 
-This lambda function grabs an RSS feed that is generated at
-http://aws.amazon.com/new/feed/. It iterates over each article and
-checks if the ID of the article exists in a DynamoDB table. If the
-ID is not found, it will send a message to Slack with the new release
-title, link, and description.
+This lambda function gets the search results that are resturned when
+accessing https://aws.amazon.com/new/. It uses an API endpoint that is
+not officially published to get this data. Because of that, this function
+will fall back to the RSS feed if the API search result fails.
 
-The function is intended to run every 5 minutes. Since the
-feed doesn't change that often, when the script determines the ID is already
+It then iterates over each article and checks if it exists in a DynamoDB 
+table. If the url is not found, it will send a message to Slack with 
+the new release title, link, and description.
+
+The function is intended to run every 5 minutes. Since the feed doesn't 
+change that often, when the script determines the url is already
 in DynamoDB it ignores it and moves on.
 """
 import boto3
@@ -34,6 +37,12 @@ DDB_TABLE = os.environ['DDB_TABLE']
 
 
 class NewRelease(object):
+    """Parent class of the NewRelease object. There are 2 classes
+    that are a subclass of this one - one for releases that are
+    returned from the search API url, and one for releases that
+    are returned from the RSS feed.
+    """
+
     def __init__(self, url, title, published_date, body):
         self.url = url
         self.title = title
@@ -84,6 +93,10 @@ class NewRelease(object):
 
 
 class APINewRelease(NewRelease):
+    """Subclass of NewRelease that creates an object returned
+    from the search API
+    """
+
     def __init__(self, release):
         self.url = f'https://aws.amazon.com{release["additionalFields"]["headlineUrl"]}'
         self.title = release['additionalFields']['headline'].strip()
@@ -98,6 +111,10 @@ class APINewRelease(NewRelease):
 
 
 class RSSNewRelease(NewRelease):
+    """Subclass of NewRelease that creates an object returned
+    from the RSS feed
+    """
+
     def __init__(self, release):
         self.url = release['link']
         self.title = release['title']
@@ -191,37 +208,45 @@ def get_webhook_urls():
         return slack_urls['urls']
 
 
-def format_date(d):
-    return datetime.strptime(d, '%a, %d %b %Y %H:%M:%S %z')
+def format_date(date_string):
+    return datetime.strptime(date_string, '%a, %d %b %Y %H:%M:%S %z')
 
 
 @tracer.capture_lambda_handler
 def main(event, context):
-    """Iterates over each entry in the news feed, checks if the ID
-    is already in the DynamoDB history table. If not, creates a slack message
-    and posts it. Otherwise, the article is ignored and is assumed to
+    """Iterates over each new release and checks if the URL is already
+    in the DynamoDB history table. If not, creates a slack message
+    and posts it. Otherwise, the release is ignored and is assumed to
     have already been sent.
     """
     http_connection = urllib3.PoolManager()
     try:
+        # Gets the latest 25 releases from the search API
+        logger.info('Getting releases from search API')
         http_response = http_connection.request('GET', WHATS_NEW_SEARCH_API)
         items = json.loads(http_response.data.decode('utf-8'))['items']
-        releases = [APINewRelease(item['item']) for item in items]
+        releases = [APINewRelease(item['item']) for item in reversed(items)]
     except Exception as error:
+        # Fall back to RSS feed if search API fails
         logger.warn(f'Problem getting releases from search API: {error}')
         logger.info('Falling back to RSS feed')
         try:
             items = feedparser.parse(WHATS_NEW_RSS_FEED)
             logger.info('Parsing RSS feed')
-            twelve_hours_ago = timedelta(hours=72)
+            twelve_hours_ago = timedelta(hours=12)
             now = datetime.now(timezone.utc)
             # Only look at entries that were published 12 hours ago
             releases = [RSSNewRelease(item) for item in items['entries'] if (
                 now - format_date(item['published'])) < twelve_hours_ago]
         except Exception as error:
-            logger.error(f'Problem getting feed: {error}')
+            logger.error(f'Problem getting RSS feed: {error}')
             raise
-    logger.info('RSS entries', extra={'entries': [r for r in releases]})
+
+    """Iterate over the releases, check if each has been sent, and send 
+    to Slack webhook URL if it's new.
+    """
+    logger.debug('Releases received', extra={
+        'releases': [r for r in releases]})
     slack_webhook_urls = get_webhook_urls()
     logger.info('Checking each release')
     for release in releases:
