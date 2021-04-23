@@ -101,8 +101,13 @@ class APINewRelease(NewRelease):
         self.url = f'https://aws.amazon.com{release["additionalFields"]["headlineUrl"]}'
         self.title = release['additionalFields']['headline'].strip()
         self.published_date = release['additionalFields']['postDateTime']
-        self.body = BeautifulSoup(
-            release['additionalFields']['postSummary'], 'html.parser').get_text()
+        try:
+            self.body = BeautifulSoup(
+                release['additionalFields']['postSummary'], 'html.parser').get_text()
+        except KeyError:
+            summary = BeautifulSoup(
+                release['additionalFields']['postBody'], 'html.parser').get_text()
+            self.body = summary.split('.')[0]
         NewRelease.__init__(self, self.url, self.title,
                             self.published_date, self.body)
 
